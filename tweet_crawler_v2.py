@@ -13,8 +13,7 @@ from xlwt import Workbook
 from xlutils.copy import copy
 
 import threading
-from time import sleep
-from threading import Thread
+import time
 
 class FilePaths:
     """ This class will hold all the file paths"""
@@ -59,6 +58,21 @@ class Writer:
 
     def getTweetsFromFile(self, loc='tweets.txt'):
         return json.load(open(loc,'r'))
+
+class RepeatEvery(threading.Thread):
+    def __init__(self, interval, func, *args, **kwargs):
+        threading.Thread.__init__(self)
+        self.interval = interval  # seconds between calls
+        self.func = func          # function to call
+        self.args = args          # optional positional argument(s) for call
+        self.kwargs = kwargs      # optional keyword argument(s) for call
+        self.runable = True
+    def run(self):
+        while self.runable:
+            self.func(*self.args, **self.kwargs)
+            time.sleep(self.interval)
+    def stop(self):
+        self.runable = False
 
 
 class ExcelFunctions:
@@ -113,16 +127,16 @@ class TwitterSearcher:
         self.topics=[]
 
     def populateFoodDictionary(self, keywords, l):
-        match_string = "#food OR #drink OR #soup OR #chicken OR #salad or #steak"   
+        match_string = " #food OR #drink OR #soup OR #chicken OR #salad OR #steak "   
         refined_list = []
         for element in l:
             print element
             e = element.strip().lower()
             refined_list.append(urllib.quote(e))     #general
             refined_list.append(urllib.quote(e+match_string)) #postive attitude {https://dev.twitter.com/rest/public/search}
-            refined_list.append(urllib.quote(e+":( "+match_string)) #negative attitude 
-            refined_list.append(urllib.quote(e+"? "+match_string)) #positive attitude and asking question
-            refined_list.append(urllib.quote(e+"?"+match_string)) #negative attitude and asking question
+            refined_list.append(urllib.quote(e+" :( "+match_string)) #negative attitude 
+            refined_list.append(urllib.quote(e+" ? "+match_string)) #positive attitude and asking question
+            refined_list.append(urllib.quote(e+" ? "+match_string)) #negative attitude and asking question
             refined_list.append(urllib.quote(e+" OR delicious"+match_string)) # containing either food or delicious or both
             refined_list.append(urllib.quote(e+" OR bad"+match_string)) #containing either food or bad or both
 
@@ -175,16 +189,13 @@ class TwitterSearcher:
                         elif topic == KeyWords.steak:
                             self.topics.append(KeyWords.steak)
 
-#        print len(self.statuses)
-#        print len(self.tweet_times)
-#        print len(self.days)
-#        print len(self.tweet_ids)
 
 def crawl_activity(xl_object, writer_object, twitter_object):
-    threading.Timer(18000, crawl_activity).start() #do it 3 times every 15 minutes
+    """P.S: This section needs clearing up because of laziness, I just mechanically 
+        copy and pasted many times."""
 
     parsed_xl_tweets = xl_object.openExcel(FilePaths.tweets_xl_file)
-    parsed_tweets_sheet = xl_object.openSheet(parsed_xl_tweets,KeyWords.tweet_sheet)    #Not used yet
+    parsed_tweets_sheet = xl_object.openSheet(parsed_xl_tweets,KeyWords.tweet_sheet)    
     parsed_pizza_list = xl_object.openSheet(parsed_xl_tweets, KeyWords.pizza_sheet)
     parsed_drink_list = xl_object.openSheet(parsed_xl_tweets, KeyWords.drink_sheet)
     parsed_soup_list = xl_object.openSheet(parsed_xl_tweets, KeyWords.soup_sheet)
@@ -197,7 +208,7 @@ def crawl_activity(xl_object, writer_object, twitter_object):
     json_tweets = twitter_object.pullTweets(twitter_object.getFoodDictionary()[KeyWords.pizza])
     writer_object.writeOut(json_tweets)
 
-    twitter_object.listPopulate(writer_object.getTweetsFromFile(), KeyWords.pizza_sheet)
+    twitter_object.listPopulate(writer_object.getTweetsFromFile(), KeyWords.pizza)
 
     xl_object.insertIntoSheet(twitter_object.topics, col_val =0, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
     xl_object.insertIntoSheet(twitter_object.days, col_val =1, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
@@ -271,7 +282,6 @@ def crawl_activity(xl_object, writer_object, twitter_object):
     xl_object.insertIntoSheet(twitter_object.statuses, col_val =4, tweet_count = len(xl_object.getColumnData(parsed_tweets_sheet,1)))
 
 
-
 if __name__ == "__main__":
 
 #Load all the functions
@@ -279,27 +289,11 @@ if __name__ == "__main__":
     writer_object = Writer(FilePaths.tweets_text_file)
     twitter_object = TwitterSearcher()
 #END OF LOADING
-    t = Thread(target=crawl_activity(xl_object, writer_object, twitter_object))  # run the some_task function in another thread
-    t.daemon = True
-    snooziness = 648000 #run for three hours #int(raw_input('Enter the amount of seconds you want to run this: '))
-    t.start()
-    sleep(snooziness)
-#    crawl_activity(xl_object, writer_object, twitter_object)  # run the some_task function in another thread
-
-
-#    parsed_xl_tweets = xl_object.openExcel(FilePaths.tweets_xl_file)
-#    parsed_tweets_sheet = xl_object.openSheet(parsed_xl_tweets,KeyWords.tweet_sheet)    #Not used yet
-#    parsed_pizza_list = xl_object.openSheet(parsed_xl_tweets, KeyWords.pizza_sheet)
-#
-#    twitter_object.populateFoodDictionary(KeyWords.pizza,xl_object.getColumnData(parsed_pizza_list,0)[1:])
-#    json_tweets = twitter_object.pullTweets(twitter_object.getFoodDictionary()[KeyWords.pizza])
-#    writer_object.writeOut(json_tweets);
-#
-#    twitter_object.listPopulate(writer_object.getTweetsFromFile())
-#
-#    xl_object.insertIntoSheet(twitter_object.topics, col_val =0, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
-#    xl_object.insertIntoSheet(twitter_object.days, col_val =1, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
-#    xl_object.insertIntoSheet(twitter_object.tweet_ids, col_val =2, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
-#    xl_object.insertIntoSheet(twitter_object.tweet_times, col_val =3, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
-#    xl_object.insertIntoSheet(twitter_object.statuses, col_val =4, tweet_count = len(xl_object.getColumnData(parsed_tweets_sheet,1)))
-
+    thread = RepeatEvery(450, crawl_activity, xl_object, writer_object, twitter_object) #crawl every 450 seconds
+                                                                                        #just to be safe, since there is a restriction of 
+                                                                                        #approximately querying in a 15 minute window.  
+    print "starting"
+    thread.start()
+    thread.join(10800)  #run for 3 hours
+    thread.stop()
+    print "stopped"
