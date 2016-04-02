@@ -11,7 +11,6 @@ import re
 import json
 from xlwt import Workbook
 from xlutils.copy import copy
-
 import threading
 import time
 
@@ -60,6 +59,9 @@ class Writer:
         return json.load(open(loc,'r'))
 
 class RepeatEvery(threading.Thread):
+    """Class used to run a function, as a thread 
+        for a certain number of times."""
+
     def __init__(self, interval, func, *args, **kwargs):
         threading.Thread.__init__(self)
         self.interval = interval  # seconds between calls
@@ -67,15 +69,19 @@ class RepeatEvery(threading.Thread):
         self.args = args          # optional positional argument(s) for call
         self.kwargs = kwargs      # optional keyword argument(s) for call
         self.runable = True
+
     def run(self):
         while self.runable:
             self.func(*self.args, **self.kwargs)
             time.sleep(self.interval)
+
     def stop(self):
         self.runable = False
 
 
 class ExcelFunctions:
+    """Contains all the necessary functions that are used to deal with
+        xls file"""
 
     def __init__(self):
         pass
@@ -127,7 +133,7 @@ class TwitterSearcher:
         self.topics=[]
 
     def populateFoodDictionary(self, keywords, l):
-        match_string = " #food OR #drink OR #soup OR #chicken OR #salad OR #steak "   
+        match_string = " #food OR #drink OR #soup OR #chicken OR #salad OR #steak "
         refined_list = []
         for element in l:
             print element
@@ -189,9 +195,15 @@ class TwitterSearcher:
                             self.topics.append(KeyWords.steak)
 
 
-def crawl_activity(xl_object, writer_object, twitter_object):
+def crawl_activity():
     """P.S: This section needs clearing up because of laziness, I just mechanically 
-        copy and pasted many times."""
+        copied and pasted many times."""
+
+#Load all the functions
+    xl_object = ExcelFunctions()
+    writer_object = Writer(FilePaths.tweets_text_file)
+    twitter_object = TwitterSearcher()
+#End of Loading
 
     parsed_xl_tweets = xl_object.openExcel(FilePaths.tweets_xl_file)
     parsed_tweets_sheet = xl_object.openSheet(parsed_xl_tweets,KeyWords.tweet_sheet)    
@@ -282,15 +294,8 @@ def crawl_activity(xl_object, writer_object, twitter_object):
 
 
 if __name__ == "__main__":
-
-#Load all the functions
-    xl_object = ExcelFunctions()
-    writer_object = Writer(FilePaths.tweets_text_file)
-    twitter_object = TwitterSearcher()
-#END OF LOADING
-    thread = RepeatEvery(450, crawl_activity, xl_object, writer_object, twitter_object) #crawl every 450 seconds
-                                                                                        #just to be safe, since there is a restriction of 
-                                                                                        #approximately querying in a 15 minute window.  
+    thread = RepeatEvery(450, crawl_activity) #crawl every 450 seconds #just to be safe, since there is a restriction of 
+                                                #approximately querying in a 15 minute window
     print "starting"
     thread.start()
     thread.join(10800)  #run for 3 hours
