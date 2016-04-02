@@ -133,12 +133,11 @@ class TwitterSearcher:
             print element
             e = element.strip().lower()
             refined_list.append(urllib.quote(e))     #general
-            refined_list.append(urllib.quote(e+match_string)) #postive attitude {https://dev.twitter.com/rest/public/search}
-            refined_list.append(urllib.quote(e+" :( "+match_string)) #negative attitude 
-            refined_list.append(urllib.quote(e+" ? "+match_string)) #positive attitude and asking question
-            refined_list.append(urllib.quote(e+" ? "+match_string)) #negative attitude and asking question
-            refined_list.append(urllib.quote(e+" OR delicious"+match_string)) # containing either food or delicious or both
-            refined_list.append(urllib.quote(e+" OR bad"+match_string)) #containing either food or bad or both
+            refined_list.append(urllib.quote("\"e\"" +match_string)) #postive attitude {https://dev.twitter.com/rest/public/search}
+            refined_list.append(urllib.quote("\"e\"" +" :( "+match_string)) #negative attitude 
+            refined_list.append(urllib.quote("\"e\"" + " :) "+match_string)) #positive attitude 
+            refined_list.append(urllib.quote("\"e\"" + " OR delicious OR tasty"+match_string)) # containing either food or delicious or both
+            refined_list.append(urllib.quote("\"e\"" +" OR bad"+match_string)) #containing either food or bad or both
 
         if (keywords == KeyWords.pizza):
             self.food_dict['pizza'] = refined_list
