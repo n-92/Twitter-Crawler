@@ -13,6 +13,7 @@ from xlwt import Workbook
 from xlutils.copy import copy
 import threading
 import time
+import sys
 
 class FilePaths:
     """ This class will hold all the file paths"""
@@ -20,7 +21,7 @@ class FilePaths:
         pass
 
     tweets_text_file = './tweets.txt'
-    tweets_xl_file ='/home/naing/Dropbox/4034_assignment/crawled_tweets_in_xl/generated_Tweets.xls'
+    tweets_xl_file ='./generated_Tweets.xls'
 
 class KeyWords:
     tweet_sheet = "Tweets"
@@ -133,17 +134,11 @@ class TwitterSearcher:
         self.topics=[]
 
     def populateFoodDictionary(self, keywords, l):
-        match_string = " #food OR #drink OR #soup OR #chicken OR #salad OR #steak "
         refined_list = []
         for element in l:
             print element
             e = element.strip().lower()
-            refined_list.append(urllib.quote(e))     #general
-            refined_list.append(urllib.quote("\"e\"" +match_string)) #postive attitude {https://dev.twitter.com/rest/public/search}
-            refined_list.append(urllib.quote("\"e\"" +" :( "+match_string)) #negative attitude 
-            refined_list.append(urllib.quote("\"e\"" + " :) "+match_string)) #positive attitude 
-            refined_list.append(urllib.quote("\"e\"" + " OR delicious OR tasty"+match_string)) # containing either food or delicious or both
-            refined_list.append(urllib.quote("\"e\"" +" OR bad"+match_string)) #containing either food or bad or both
+            refined_list.append(urllib.quote(e)) #containing either food or bad or both
 
         if (keywords == KeyWords.pizza):
             self.food_dict['pizza'] = refined_list
@@ -206,7 +201,7 @@ def crawl_activity():
 #End of Loading
 
     parsed_xl_tweets = xl_object.openExcel(FilePaths.tweets_xl_file)
-    parsed_tweets_sheet = xl_object.openSheet(parsed_xl_tweets,KeyWords.tweet_sheet)    
+    parsed_tweets_sheet = xl_object.openSheet(parsed_xl_tweets,KeyWords.tweet_sheet) 
     parsed_pizza_list = xl_object.openSheet(parsed_xl_tweets, KeyWords.pizza_sheet)
     parsed_drink_list = xl_object.openSheet(parsed_xl_tweets, KeyWords.drink_sheet)
     parsed_soup_list = xl_object.openSheet(parsed_xl_tweets, KeyWords.soup_sheet)
@@ -222,23 +217,23 @@ def crawl_activity():
     twitter_object.listPopulate(writer_object.getTweetsFromFile(), KeyWords.pizza)
 
     xl_object.insertIntoSheet(twitter_object.topics, col_val =0, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
-    xl_object.insertIntoSheet(twitter_object.days, col_val =1, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
+    xl_object.insertIntoSheet(twitter_object.days, col_val =5, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
     xl_object.insertIntoSheet(twitter_object.tweet_ids, col_val =2, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
     xl_object.insertIntoSheet(twitter_object.tweet_times, col_val =3, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
     xl_object.insertIntoSheet(twitter_object.statuses, col_val =4, tweet_count = len(xl_object.getColumnData(parsed_tweets_sheet,1)))
 
 #Start for Drinks
-    twitter_object.populateFoodDictionary(KeyWords.drink,xl_object.getColumnData(parsed_drink_list,0)[1:])
-    json_tweets = twitter_object.pullTweets(twitter_object.getFoodDictionary()[KeyWords.drink])
-    writer_object.writeOut(json_tweets)
-
-    twitter_object.listPopulate(writer_object.getTweetsFromFile(),KeyWords.drink)
-
-    xl_object.insertIntoSheet(twitter_object.topics, col_val =0, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
-    xl_object.insertIntoSheet(twitter_object.days, col_val =1, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
-    xl_object.insertIntoSheet(twitter_object.tweet_ids, col_val =2, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
-    xl_object.insertIntoSheet(twitter_object.tweet_times, col_val =3, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
-    xl_object.insertIntoSheet(twitter_object.statuses, col_val =4, tweet_count = len(xl_object.getColumnData(parsed_tweets_sheet,1)))
+#    twitter_object.populateFoodDictionary(KeyWords.drink,xl_object.getColumnData(parsed_drink_list,0)[1:])
+#    json_tweets = twitter_object.pullTweets(twitter_object.getFoodDictionary()[KeyWords.drink])
+#    writer_object.writeOut(json_tweets)
+#
+#    twitter_object.listPopulate(writer_object.getTweetsFromFile(),KeyWords.drink)
+#
+#    xl_object.insertIntoSheet(twitter_object.topics, col_val =0, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
+#    xl_object.insertIntoSheet(twitter_object.days, col_val =1, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
+#    xl_object.insertIntoSheet(twitter_object.tweet_ids, col_val =2, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
+#    xl_object.insertIntoSheet(twitter_object.tweet_times, col_val =3, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
+#    xl_object.insertIntoSheet(twitter_object.statuses, col_val =4, tweet_count = len(xl_object.getColumnData(parsed_tweets_sheet,1)))
 
 #Start for Chicken
     twitter_object.populateFoodDictionary(KeyWords.chicken,xl_object.getColumnData(parsed_chicken_list,0)[1:])
@@ -248,7 +243,7 @@ def crawl_activity():
     twitter_object.listPopulate(writer_object.getTweetsFromFile(),KeyWords.chicken)
 
     xl_object.insertIntoSheet(twitter_object.topics, col_val =0, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
-    xl_object.insertIntoSheet(twitter_object.days, col_val =1, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
+    xl_object.insertIntoSheet(twitter_object.days, col_val =5, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
     xl_object.insertIntoSheet(twitter_object.tweet_ids, col_val =2, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
     xl_object.insertIntoSheet(twitter_object.tweet_times, col_val =3, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
     xl_object.insertIntoSheet(twitter_object.statuses, col_val =4, tweet_count = len(xl_object.getColumnData(parsed_tweets_sheet,1)))
@@ -261,7 +256,7 @@ def crawl_activity():
     twitter_object.listPopulate(writer_object.getTweetsFromFile(),KeyWords.soup)
 
     xl_object.insertIntoSheet(twitter_object.topics, col_val =0, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
-    xl_object.insertIntoSheet(twitter_object.days, col_val =1, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
+    xl_object.insertIntoSheet(twitter_object.days, col_val =5, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
     xl_object.insertIntoSheet(twitter_object.tweet_ids, col_val =2, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
     xl_object.insertIntoSheet(twitter_object.tweet_times, col_val =3, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
     xl_object.insertIntoSheet(twitter_object.statuses, col_val =4, tweet_count = len(xl_object.getColumnData(parsed_tweets_sheet,1)))
@@ -274,7 +269,7 @@ def crawl_activity():
     twitter_object.listPopulate(writer_object.getTweetsFromFile(),KeyWords.salad)
 
     xl_object.insertIntoSheet(twitter_object.topics, col_val =0, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
-    xl_object.insertIntoSheet(twitter_object.days, col_val =1, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
+    xl_object.insertIntoSheet(twitter_object.days, col_val =5, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
     xl_object.insertIntoSheet(twitter_object.tweet_ids, col_val =2, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
     xl_object.insertIntoSheet(twitter_object.tweet_times, col_val =3, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
     xl_object.insertIntoSheet(twitter_object.statuses, col_val =4, tweet_count = len(xl_object.getColumnData(parsed_tweets_sheet,1)))
@@ -287,7 +282,7 @@ def crawl_activity():
     twitter_object.listPopulate(writer_object.getTweetsFromFile(),KeyWords.steak)
 
     xl_object.insertIntoSheet(twitter_object.topics, col_val =0, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
-    xl_object.insertIntoSheet(twitter_object.days, col_val =1, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
+    xl_object.insertIntoSheet(twitter_object.days, col_val =5, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
     xl_object.insertIntoSheet(twitter_object.tweet_ids, col_val =2, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
     xl_object.insertIntoSheet(twitter_object.tweet_times, col_val =3, tweet_count=len(xl_object.getColumnData(parsed_tweets_sheet,1)))
     xl_object.insertIntoSheet(twitter_object.statuses, col_val =4, tweet_count = len(xl_object.getColumnData(parsed_tweets_sheet,1)))
@@ -298,6 +293,6 @@ if __name__ == "__main__":
                                                 #approximately querying in a 15 minute window
     print "starting"
     thread.start()
-    thread.join(10800)  #run for 3 hours
+    thread.join(21600)  #run for n hours
     thread.stop()
     print "stopped"
